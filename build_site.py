@@ -1,4 +1,4 @@
-import json, os, html
+import json, os, html, shutil
 
 BASE = r"C:\Users\Tricia\AppData\Local\hermes\cache\scratch\looma"
 SITE = os.path.join(BASE, "site")
@@ -25,7 +25,7 @@ FAMILY_PCT = 15              # family discount percent (hidden link ?fam=1 activ
 ITEMS = [
     # GF section
     {"sku": "LOC3WHOLE", "name": "Vanilla & Raspberry Cake", "gf": True, "price": 119.95, "slice_price": 12.50, "unit": "whole 10-slice cake", "img": "LOC3WHOLE_LOCAL.jpg",
-     "desc": "The flagship: vanilla bean mousse with raspberry.GF as labelled by the maker. Their most-loved GF cake."},
+     "desc": "The flagship: vanilla bean mousse with raspberry. GF as labelled by the maker. Their most-loved GF cake."},
     {"sku": "LOC6", "name": "Vegan Chocolate Mud Cake", "gf": True, "df": True, "vg": True, "price": 119.95, "slice_price": 12.50, "unit": "whole 10-slice cake", "img": "LOC6WHOLE.jpg",
      "desc": "Gluten free, vegan AND dairy free. The one that covers every allergy at the table. 26 five-star reviews of this cake."},
     {"sku": "LOC8", "name": "Raffaello Cake", "gf": True, "price": 119.95, "slice_price": 13.95, "unit": "whole cake, pre-cut into 10", "img": "LOC8.jpg",
@@ -797,7 +797,7 @@ bp = "bottompad" if FLAGS["bottompad"] else ""
 visits_js = ""
 if FLAGS["visits"]:
     visits_js = (
-        'var VISITS_URL = "";   // anonymous visit counter: paste the Apps Script /exec URL here once the visit-aware doPost is deployed\n'
+        'var VISITS_URL = "https://script.google.com/macros/s/AKfycbzlDlCVP0uprvSfGLG1kxItBQLXt4Xz9ZSP3E338JxaXQ2ymYT6gVKY2ygs-gDRPZcW/exec";   // anonymous visit counter (same tally web app)\n'
         'function sendVisit(){\n'
         '  try {\n'
         '    if (!VISITS_URL) return;\n'
@@ -849,6 +849,13 @@ page = (page.replace("__OG__", og_tags)
             .replace("__SNOWJS__", snowjs)
             .replace("__VISITS__", visits_js)
             .replace("__BP__", bp))
+# make sure every image referenced by the site exists in images/ (macarons landed in the site root once)
+if not os.path.exists(os.path.join(SITE, "images", "MACARONS.jpg")):
+    src = os.path.join(SITE, "MACARONS.jpg")
+    if os.path.exists(src):
+        shutil.copy(src, os.path.join(SITE, "images", "MACARONS.jpg"))
+        print("copied MACARONS.jpg into images/")
+
 open(os.path.join(SITE, "index.html"), "w", encoding="utf-8").write(page)
 
 # preview copy with absolute image paths
