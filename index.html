@@ -608,6 +608,14 @@ function sendVisit(){
   } catch(e){}
 }
 sendVisit();
+function trackEvent(ev, detail){
+  try {
+    if (!VISITS_URL || !window.__visitId) return;
+    var d = detail || "";
+    if (d.length > 80) d = d.slice(0, 80);
+    fetch(VISITS_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:"EVENT|" + window.__visitId + "|" + ev + "|" + d}).catch(function(){});
+  } catch(e){}
+}
 
 
 function money(n){ return "$" + n.toFixed(2); }
@@ -615,6 +623,7 @@ function money(n){ return "$" + n.toFixed(2); }
 function bump(id, delta){
   if (!cart[id]) return;
   cart[id].qty += delta;
+  if (delta > 0 && window.trackEvent) trackEvent("added to cart", (cart[id].name || id) + " x" + cart[id].qty);
   if (cart[id].qty <= 0) delete cart[id];
   render();
 }
@@ -773,6 +782,7 @@ document.getElementById("copyOrder").addEventListener("click", function(){
 });
 
 document.getElementById("payIdBtn").addEventListener("click", function(){
+    if (window.trackEvent) trackEvent("clicked PayID", "");
   if (navigator.clipboard){ navigator.clipboard.writeText("yourfoodtribe@gmail.com").catch(function(){}); }
   this.textContent = "PayID copied! Pay in your bank app";
   var btn = this;
@@ -780,6 +790,7 @@ document.getElementById("payIdBtn").addEventListener("click", function(){
 });
 
 document.getElementById("payPalBtn").addEventListener("click", function(){
+    if (window.trackEvent) trackEvent("clicked PayPal", "total $" + (window.__total || 0).toFixed(2));
   var keys = Object.keys(cart).filter(function(k){ return cart[k].qty > 0; });
   if (!keys.length){ alert("Add some treats to your order first!"); return; }
   // log the full order to the tally sheet BEFORE they leave for PayPal
@@ -872,6 +883,7 @@ function boxInit(){
 }
 
 function boxBump(i, d){
+  if (d > 0 && window.trackEvent && BOX_PIECES[i]) trackEvent("building box", BOX_PIECES[i].n);
   boxQty[i] = Math.max(0, (boxQty[i] || 0) + d);
   document.getElementById("bqty" + i).textContent = boxQty[i];
   boxRender();
@@ -932,6 +944,7 @@ function scrollCard(name){
 
 function boxAdd(){
   var t = boxTotals();
+  if (window.trackEvent && t.contents) trackEvent("added box to cart", t.contents.join(", ").slice(0, 60));
   if (t.total !== 4 && t.total !== 6 && t.total !== 10) return;
   var id = "custombox-" + Date.now();
   var name = "Your Box of " + t.total + " (" + t.contents.join(", ") + ")";
